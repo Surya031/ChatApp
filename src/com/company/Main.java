@@ -127,7 +127,7 @@ public abstract class Main implements Runnable  {
 
         }
         catch(Exception e){
-            newMessages.setText("No person is ONLINE....");
+            newMessages.setText("No person is ONLINE.........");
         }
 
         //end socket connection
