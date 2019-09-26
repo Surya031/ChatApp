@@ -10,6 +10,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
 import java.io.PrintWriter;
+import java.sql.*;
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -20,7 +21,6 @@ import static javax.swing.JOptionPane.*;
 public abstract class Main implements Runnable  {
 
     public static void main(String[] args) {
-
             //code for login and chat frame
             JFrame frame1 = new JFrame("CHAT APP");
             frame1.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
@@ -88,34 +88,78 @@ public abstract class Main implements Runnable  {
             frame3.setSize(500, 700);
             frame3.setLayout(null);
             final JTextField nameTextField = new JTextField();
-            nameTextField.setBounds(350, 50, 100, 30);
+            nameTextField.setBounds(250, 50, 150, 30);
             final JTextField ageTextField = new JTextField();
-            ageTextField.setBounds(350, 100, 100, 30);
-            final JTextField phoneNoTextField = new JTextField();
-            phoneNoTextField.setBounds(350, 150, 100, 30);
-            final JTextField emailTextField = new JTextField();
-            emailTextField.setBounds(350, 200, 100, 30);
+            ageTextField.setBounds(250, 100, 50, 30);
+            final JTextField usernameTextField = new JTextField();
+            usernameTextField.setBounds(250, 150, 150, 30);
+            final JTextField phoneTextField = new JTextField();
+            phoneTextField.setBounds(250, 200, 150, 30);
+            JTextField emailTextField =new JTextField();
+            emailTextField.setBounds(250,250,150,30);
+            JPasswordField newpasswordTextField=new JPasswordField();
+            newpasswordTextField.setBounds(250,300,150,30);
+            String[] spinnerstr1 = new String[2];
+            spinnerstr1[0] = "What's your Neighbour pet name";
+            spinnerstr1[1] = "What's your favourite book's Name";
+            SpinnerModel value1 = new SpinnerListModel(spinnerstr1);
+            JSpinner spinner1 = new JSpinner(value1);
+            spinner1.setEditor(new JSpinner.DefaultEditor(spinner1));
+            spinner1.setBounds(20,400,300,30);
+            JTextField spinneranswer=new JTextField();
+            spinneranswer.setBounds(20,450,300,30);
             JLabel name = new JLabel("Name:");
             name.setBounds(20, 50, 100, 30);
             JLabel age = new JLabel("Age:");
             age.setBounds(20, 100, 100, 30);
-            JLabel email = new JLabel("Email:");
-            email.setBounds(20, 150, 100, 30);
+            JLabel username = new JLabel("Username(Unique):");
+            username.setBounds(20, 150, 200, 30);
             JLabel PhoneNo = new JLabel("Mobile Number :");
             PhoneNo.setBounds(20, 200, 200, 30);
+            JLabel email=new JLabel("Email");
+            email.setBounds(20,250,100,30);
+            JLabel newPasswordLabel=new JLabel("New Password");
+            newPasswordLabel.setBounds(20,300,100,30);
+            JLabel spinnerMessage=new JLabel("Security Question(for recovering password)");
+            spinnerMessage.setBounds(20,350,300,30);
             JButton submit = new JButton("Submit");
-            submit.setBounds(200, 350, 100, 30);
+            submit.setBounds(200, 500, 100, 30);
             frame3.add(name);
             frame3.add(nameTextField);
             frame3.add(age);
             frame3.add(ageTextField);
             frame3.add(PhoneNo);
-            frame3.add(phoneNoTextField);
+            frame3.add(phoneTextField);
             frame3.add(email);
             frame3.add(emailTextField);
+            frame3.add(usernameTextField);
+            frame3.add(username);
+            frame3.add(spinner1);
+            frame3.add(spinneranswer);
+            frame3.add(spinnerMessage);
             frame3.add(submit);
-            //Cosing of singnup frame
+            frame3.add(newpasswordTextField);
+            frame3.add(newPasswordLabel);
+            //Closing of singnup frame
 
+        //connecting to databse
+        Connection con;
+        con = null;
+
+        try {
+            con= DriverManager.getConnection("jdbc:mysql://localhost/Students?user=root&password=password");
+            /*Statement statement=con.createStatement();
+            String query="Alter table studentsInfo add mobile "+"int(10)";
+            System.out.println("Connected to mysql");
+            statement.executeUpdate(query);
+            System.out.println("query done!");*/
+
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        //close of database connection
 
         //socket Connection
         Socket socket=null;
@@ -220,16 +264,29 @@ public abstract class Main implements Runnable  {
             frame5.setLayout(null);
             //end of create new Password frame
 
-            Login.addActionListener(new ActionListener() {
+        Connection finalCon1 = con;
+        Login.addActionListener(new ActionListener() {
                 public void actionPerformed(ActionEvent actionEvent) {
-                    String text1 = textField1.getText();
-                    String text2 = String.valueOf(textField2.getPassword());
-                    if (text1.equals("Surya") && text2.equals("Pass")) {
-                        frame1.setVisible(false);
-                        frame2.setVisible(true);
+                    try {
+                        String text1 = textField1.getText();
+                        String text2 = String.valueOf(textField2.getPassword());
+                        Statement st = finalCon1.createStatement();
+                        String query="Select Password from PersonDetails Where Username=" + "'"
+                                + text1 + "'";
+                        ResultSet resultSet = st.executeQuery(query);
+                        String result=null;
+                        while (resultSet.next()) {
+                            result=resultSet.getString("Password");;
+                        }
+                        System.out.println(result);
+                        if (text2.equals(result)) {
+                            frame1.setVisible(false);
+                            frame2.setVisible(true);
 
-                    } else {
-                        JOptionPane.showMessageDialog(frame1, "Wrong Credentials");
+                        }
+                    }
+                    catch (Exception e){
+                        JOptionPane.showMessageDialog(frame1, e.getMessage());
                     }
                 }
             });
@@ -253,9 +310,41 @@ public abstract class Main implements Runnable  {
                 public void actionPerformed(ActionEvent actionEvent) {
                     frame4.setVisible(false);
                     frame5.setVisible(true);
+
                 }
             });
+            //close of submit button
 
+        //working of submit button in sigup frame
+        Connection finalCon = con;
+        submit.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                try{
+                    Statement statement= finalCon.createStatement();
+                    String query="INSERT INTO PersonDetails " +"values("+
+                            "'"+nameTextField.getText().toString()+"'"+","+
+                            "'"+ageTextField.getText().toString()+"'"+","+
+                            "'"+usernameTextField.getText().toString()+"'"+","+
+                            "'"+phoneTextField.getText().toString()+"'"+","+
+                            "'"+emailTextField.getText().toString()+"'"+","+
+                            "'"+newpasswordTextField.getText().toString()+"'"+","+
+                            "'"+spinneranswer.getText().toString()+"'"+")";
+                            System.out.println(query);
+                            statement.executeUpdate(query);
+                            finalCon.close();
+                }
+                catch (Exception e){
+                    JOptionPane.showMessageDialog(frame3,e.getMessage());
+                }
+                finally {
+                    //JOptionPane.showMessageDialog(frame3, "Signnup sucessful \n Retuning to login page...");
+                    frame3.setVisible(false);
+                    frame1.setVisible(true);
+                }
+            }
+        });
+        //close working of submit button
     }
 
     private static void messageFromServer(JTextArea newMessages, Socket socket) throws IOException {
