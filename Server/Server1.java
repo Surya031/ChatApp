@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 
 
-public class Server1 {
+public class Server1{
 
     
     public static void main(String[] args) throws Exception {
